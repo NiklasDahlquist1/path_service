@@ -1,0 +1,6 @@
+geometry_msgs/Point start_position
+geometry_msgs/Point goal_position
+---
+float64 path_cost
+nav_msgs/Path path
+bool path_found

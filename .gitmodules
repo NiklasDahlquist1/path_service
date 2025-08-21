@@ -1,0 +1,4 @@
+[submodule "path_planning"]
+	path = path_planning
+	url = git@github.com:NiklasDahlquist1/path_planning.git
+	branch = fix_for_ros
