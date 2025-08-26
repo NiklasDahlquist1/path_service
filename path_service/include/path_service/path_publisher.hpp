@@ -16,6 +16,7 @@
 
 #include <unistd.h> // linux
 
+#include "simulation_2d.hpp"
 
 // const double resolution = 1;
 
@@ -140,9 +141,9 @@ class Path_generator : public rclcpp::Node
     // const float map_origin_x = -10; // offset in meter. Tells how the map is moved in relation to the world
     // const float map_origin_y = -10;
 
-    const float resolution_meter_per_pixel = 1;//1.64;
-    const float map_origin_x = 0; // offset in meter. Tells how the map is moved in relation to the world
-    const float map_origin_y = 0;
+    const float resolution_meter_per_pixel = 0.5;//1.64;
+    const float map_origin_x = -10; // offset in meter. Tells how the map is moved in relation to the world
+    const float map_origin_y = -10;
 };
 
 Path_generator::Path_generator() : Node("Path_generator")
@@ -160,8 +161,8 @@ Path_generator::Path_generator() : Node("Path_generator")
     this->path_cost_service = this->create_service<path_service::srv::GetPath>("get_path", std::bind(&Path_generator::plan_path_service, this, std::placeholders::_1, std::placeholders::_2));
     this->update_map_path_service = this->create_service<path_service::srv::SetMap>("set_map_filepath", std::bind(&Path_generator::set_map_by_path, this, std::placeholders::_1, std::placeholders::_2));
 
-    // std::string file_path_map = "/home/niklas/ws/ros_auction_ws/src/path_service/map/map_safety.png";
-    std::string file_path_map = "/home/niklas/ws/ros_auction_ws/src/path_service/map/map.png";
+    std::string file_path_map = "/home/niklas/ws/ros_auction_ws/src/planning/path_service/map/map_safety.png";
+    // std::string file_path_map = "/home/niklas/ws/ros_auction_ws/src/planning/path_service/map/map.png";
     init_map_to_grid(file_path_map);
 }
 

@@ -25,7 +25,7 @@
 // TMP, use the class later
 
 // std::string file_path_map = "/home/niklas/ws/ros_auction_ws/src/path_service/map/map.png";
-std::string file_path_map = "/home/niklas/ws/ros_auction_ws/src/path_service/map/map.png";
+// std::string file_path_map = "/home/niklas/ws/ros_auction_ws/src/path_service/map/map.png";
 std::vector<std::vector<int>> global_grid;
 cv::Mat image_map;
 cv::Mat image_annotated;
@@ -207,8 +207,8 @@ std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 int main(int argc, char **argv)
 {
     // init global variables
-    global_grid = simulation_2d::image_to_occupancy_grid(file_path_map); // TODO: Dont use this global path...
-    image_map = cv::imread(file_path_map);
+    // global_grid = simulation_2d::image_to_occupancy_grid(file_path_map); // TODO: Dont use this global path...
+    // image_map = cv::imread(file_path_map);
 
 
 
@@ -216,7 +216,7 @@ int main(int argc, char **argv)
 
     rclcpp::init(argc, argv);
 
-    std::shared_ptr<rclcpp::Node> node = rclcpp::Node::make_shared("path_service");
+    // std::shared_ptr<rclcpp::Node> node = rclcpp::Node::make_shared("path_service");
     // rclcpp::CallbackGroup::SharedPtr callback_group_service_call = node->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 
     // rclcpp::Service<path_service::srv::GetPath>::SharedPtr cost_service = node->create_service<path_service::srv::GetPath>("get_path", &plan_path_service);
