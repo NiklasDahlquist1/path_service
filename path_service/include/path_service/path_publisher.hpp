@@ -15,6 +15,7 @@
 #include "nav_msgs/msg/occupancy_grid.hpp"
 
 #include <unistd.h> // linux
+#include <sys/stat.h>
 
 #include "simulation_2d.hpp"
 
@@ -161,9 +162,18 @@ Path_generator::Path_generator() : Node("Path_generator")
     this->path_cost_service = this->create_service<path_service::srv::GetPath>("get_path", std::bind(&Path_generator::plan_path_service, this, std::placeholders::_1, std::placeholders::_2));
     this->update_map_path_service = this->create_service<path_service::srv::SetMap>("set_map_filepath", std::bind(&Path_generator::set_map_by_path, this, std::placeholders::_1, std::placeholders::_2));
 
-    std::string file_path_map = "/home/niklas/ws/ros_auction_ws/src/planning/path_service/map/map_safety.png";
-    // std::string file_path_map = "/home/niklas/ws/ros_auction_ws/src/planning/path_service/map/map.png";
-    init_map_to_grid(file_path_map);
+
+
+    // get ROS parameters
+    try
+    {
+        this->declare_parameter("map_url", "/home/niklas/ws/ros_auction_ws/src/planning/path_service/map/map_safety.png"); // Default value
+    }
+    catch(const std::exception& e) { }
+    std::string map_file_path;
+    this->get_parameter("map_url", map_file_path);
+
+    init_map_to_grid(map_file_path);
 }
 
 Path_generator::~Path_generator()
@@ -173,6 +183,14 @@ Path_generator::~Path_generator()
 
 void Path_generator::init_map_to_grid(std::string path)
 {
+    // Check if file exists
+    struct stat buffer;
+    if(stat (path.c_str(), &buffer) != 0)
+    {
+        RCLCPP_ERROR_STREAM(this->get_logger(), "Map file '" << path << "' does not exist");
+        throw std::invalid_argument("Map file does not exists!");
+    }
+
     // init path planner here
 
     global_grid = simulation_2d::image_to_occupancy_grid(path);
@@ -205,10 +223,6 @@ void Path_generator::goal_position_callback(geometry_msgs::msg::Point::SharedPtr
     current_point = this->current_odom.pose.pose.position;
     target_point = *msg.get();
 
-
-    // double resolution_meter_per_pixel = 2;
-    // double map_origin_x = 0;
-    // double map_origin_y = 0;
 
     nav_msgs::msg::Path planned_path;
     get_path(this->global_grid, planned_path, current_point, target_point, this->resolution_meter_per_pixel, this->map_origin_x, this->map_origin_y);
