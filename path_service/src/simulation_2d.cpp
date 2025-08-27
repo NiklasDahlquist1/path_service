@@ -436,35 +436,6 @@ Node world_to_map(const Node& point, double resolution_meter_per_pixel, double m
 
 
 
-// std::vector<std::vector<double>> generate_cost_vector(const std::vector<Node>& start_points, const std::vector<Node>& target_points, const std::vector<std::vector<Node>>& all_paths)
-// {
-
-// }
-
-
-
-
-
-
-
-
-
-
-
-// Simulation_2d::Simulation_2d() 
-// {
-
-// }
-
-
-// Simulation_2d::~Simulation_2d()
-// {
-
-// }
-
-
-
-
 
 } // end namespace simulation_2d
 
