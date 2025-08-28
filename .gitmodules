@@ -2,3 +2,6 @@
 	path = path_planning
 	url = git@github.com:NiklasDahlquist1/path_planning.git
 	branch = fix_for_ros
+[submodule "path_service/libraries/yaml-cpp"]
+	path = path_service/libraries/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp

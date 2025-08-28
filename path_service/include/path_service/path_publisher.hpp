@@ -16,10 +16,12 @@
 
 #include <unistd.h> // linux
 #include <sys/stat.h>
+#include <filesystem>
+#include "yaml-cpp/yaml.h"
+
 
 #include "simulation_2d.hpp"
 
-// const double resolution = 1;
 
 
 
@@ -138,13 +140,10 @@ class Path_generator : public rclcpp::Node
     std::vector<std::vector<int>> global_grid;
 
 
-    // const float resolution_meter_per_pixel = 0.5;//1.64;
-    // const float map_origin_x = -10; // offset in meter. Tells how the map is moved in relation to the world
-    // const float map_origin_y = -10;
-
-    const float resolution_meter_per_pixel = 0.5;//1.64;
-    const float map_origin_x = -10; // offset in meter. Tells how the map is moved in relation to the world
-    const float map_origin_y = -10;
+    // offset in meter. Tells how the map is moved in relation to the world
+    double resolution_meter_per_pixel;
+    double map_origin_x;
+    double map_origin_y;
 };
 
 Path_generator::Path_generator() : Node("Path_generator")
@@ -167,7 +166,7 @@ Path_generator::Path_generator() : Node("Path_generator")
     // get ROS parameters
     try
     {
-        this->declare_parameter("map_url", "/home/niklas/ws/ros_auction_ws/src/planning/path_service/map/map_safety.png"); // Default value
+        this->declare_parameter("map_url", "/home/niklas/ws/ros_auction_ws/src/planning/path_service/map/map_safety.yaml"); // Default value
     }
     catch(const std::exception& e) { }
     std::string map_file_path;
@@ -191,9 +190,37 @@ void Path_generator::init_map_to_grid(std::string path)
         throw std::invalid_argument("Map file does not exists!");
     }
 
-    // init path planner here
+    // init map parameters from the yaml file
+        std::string image_name;
+        double resolution;
+        std::vector<double> origin;
+    try
+    {
+        YAML::Node config = YAML::LoadFile(path);
 
-    global_grid = simulation_2d::image_to_occupancy_grid(path);
+        std::string image_name = config["image"].as<std::string>();
+        double resolution = config["resolution"].as<double>();
+        std::vector<double> origin = config["origin"].as<std::vector<double>>();
+
+        this->resolution_meter_per_pixel = resolution;
+        this->map_origin_x = origin[0];
+        this->map_origin_y = origin[1];
+    }
+    catch(const std::exception& e)
+    {
+        RCLCPP_ERROR_STREAM(this->get_logger(), "Something is wrong with reading the yaml file. Did you specify a yaml file as the ros argument?");
+        std::cerr << e.what() << '\n';
+        return;
+    }
+    
+    // TODO: read the other yaml parameters as well? 
+
+    
+
+    std::filesystem::path p(path);
+    std::string directiory = p.parent_path();
+    // init path planner here
+    global_grid = simulation_2d::image_to_occupancy_grid(p.parent_path().string() + "/" + image_name);
     RCLCPP_INFO_STREAM(this->get_logger(), "Path planner initialized with image " << path << ". Origin: (" << this->map_origin_x << ", " << this->map_origin_y << ") Res: " << this->resolution_meter_per_pixel);
 
     // image_map = cv::imread(path);
@@ -328,6 +355,8 @@ void Path_generator::set_map_by_path( std::shared_ptr<path_service::srv::SetMap:
         response.get()->success = false;
         return;    
     }
+
+
     std::cout << "GOT NEW MAP" << request.get()->map_file_path << "\n";
 
     this->init_map_to_grid(request.get()->map_file_path);

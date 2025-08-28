@@ -28,6 +28,7 @@ INCLUDE_DIRECTORIES(
   include
   ${path_planning_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
+  yaml-cpp/include
 )
 
 
@@ -94,7 +95,7 @@ ament_target_dependencies(path_service_node
    OpenCV
  )
  rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
- target_link_libraries(path_service_node "${cpp_typesupport_target}") 
+ target_link_libraries(path_service_node "${cpp_typesupport_target}" yaml-cpp)
 # target_link_libraries(bt_generation_test_node yaml-cpp)
 
 install(TARGETS
