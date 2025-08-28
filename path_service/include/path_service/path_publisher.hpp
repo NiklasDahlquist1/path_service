@@ -191,16 +191,16 @@ void Path_generator::init_map_to_grid(std::string path)
     }
 
     // init map parameters from the yaml file
-        std::string image_name;
-        double resolution;
-        std::vector<double> origin;
+    std::string image_name;
+    double resolution;
+    std::vector<double> origin;
     try
     {
         YAML::Node config = YAML::LoadFile(path);
 
-        std::string image_name = config["image"].as<std::string>();
-        double resolution = config["resolution"].as<double>();
-        std::vector<double> origin = config["origin"].as<std::vector<double>>();
+        image_name = config["image"].as<std::string>();
+        resolution = config["resolution"].as<double>();
+        origin = config["origin"].as<std::vector<double>>();
 
         this->resolution_meter_per_pixel = resolution;
         this->map_origin_x = origin[0];
