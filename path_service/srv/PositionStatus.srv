@@ -1,0 +1,3 @@
+geometry_msgs/Point map_position
+---
+bool position_is_free

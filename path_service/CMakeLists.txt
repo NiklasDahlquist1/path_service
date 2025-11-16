@@ -53,6 +53,7 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/GetPath.srv"
   "srv/SetMap.srv"
+  "srv/PositionStatus.srv"
   DEPENDENCIES
   builtin_interfaces
   rosidl_default_generators

@@ -8,6 +8,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "path_service/srv/get_path.hpp"
 #include "path_service/srv/set_map.hpp"
+#include "path_service/srv/position_status.hpp"
 
 
 #include "nav_msgs/msg/odometry.hpp"
@@ -90,6 +91,29 @@ bool get_path(const std::vector<std::vector<int>>& global_grid, nav_msgs::msg::P
 
 
 
+bool point_is_free(const std::vector<std::vector<int>>& global_grid, const geometry_msgs::msg::Point& target_point, double resolution_meter_per_pixel, double map_origin_x, double map_origin_y)
+{
+    // transform to map coordinates
+    double x_transformed = (target_point.x - map_origin_x) / resolution_meter_per_pixel;
+    double y_transformed = (target_point.y - map_origin_y) / resolution_meter_per_pixel;
+
+    // std::cout << "Map status at (" << target_point.x << ", " << target_point.y << "): " <<  global_grid[x_transformed][y_transformed] << "\n";
+
+    // Map state == 1 -> occupied
+    // Map state == 0 -> free
+    if(global_grid[x_transformed][y_transformed] == 1)
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+
+
+
 
 
 
@@ -125,6 +149,7 @@ class Path_generator : public rclcpp::Node
 
     rclcpp::Service<path_service::srv::GetPath>::SharedPtr path_cost_service;
     rclcpp::Service<path_service::srv::SetMap>::SharedPtr update_map_path_service;
+    rclcpp::Service<path_service::srv::PositionStatus>::SharedPtr get_map_position_service;
 
     void init_map_to_grid(std::string path);
 
@@ -132,6 +157,7 @@ class Path_generator : public rclcpp::Node
     void goal_position_callback(geometry_msgs::msg::Point::SharedPtr msg);
 
 
+    void get_map_position_status( std::shared_ptr<path_service::srv::PositionStatus::Request> request, std::shared_ptr<path_service::srv::PositionStatus::Response> response);
     void plan_path_service( std::shared_ptr<path_service::srv::GetPath::Request> request, std::shared_ptr<path_service::srv::GetPath::Response> response);
     void set_map_by_path( std::shared_ptr<path_service::srv::SetMap::Request> request, std::shared_ptr<path_service::srv::SetMap::Response> response);
     double path_to_distance(const nav_msgs::msg::Path& path);
@@ -160,6 +186,7 @@ Path_generator::Path_generator() : Node("Path_generator")
 
     this->path_cost_service = this->create_service<path_service::srv::GetPath>("get_path", std::bind(&Path_generator::plan_path_service, this, std::placeholders::_1, std::placeholders::_2));
     this->update_map_path_service = this->create_service<path_service::srv::SetMap>("set_map_filepath", std::bind(&Path_generator::set_map_by_path, this, std::placeholders::_1, std::placeholders::_2));
+    this->get_map_position_service = this->create_service<path_service::srv::PositionStatus>("get_map_position_status", std::bind(&Path_generator::get_map_position_status, this, std::placeholders::_1, std::placeholders::_2));
 
 
 
@@ -364,6 +391,17 @@ void Path_generator::set_map_by_path( std::shared_ptr<path_service::srv::SetMap:
     return;
 }
 
+
+
+void Path_generator::get_map_position_status( std::shared_ptr<path_service::srv::PositionStatus::Request> request, std::shared_ptr<path_service::srv::PositionStatus::Response> response)
+{
+    geometry_msgs::msg::Point target_point = request.get()->map_position;
+
+    bool map_point_is_free = point_is_free(this->global_grid, target_point, this->resolution_meter_per_pixel, this->map_origin_x, this->map_origin_y);
+    
+    response.get()->position_is_free = map_point_is_free;
+    return;
+}
 
 
 #endif
