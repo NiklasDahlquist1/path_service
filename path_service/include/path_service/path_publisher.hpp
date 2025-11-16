@@ -61,7 +61,7 @@ bool get_path(const std::vector<std::vector<int>>& global_grid, nav_msgs::msg::P
     auto [path_found, path_vector] = d_star_lite.Plan(start, target);
     if(path_found == false)
     {
-        std::cout << "PATH NOT FOUND? status: " << path_found << "\n";
+        std::cout << "PATH NOT FOUND? (" << start_point.x << ", " << start_point.y << ")->(" << end_point.x << ", " << end_point.y << ")\n";
         return false;
     }
 
@@ -325,10 +325,10 @@ std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     (void) end;
-    std::cout << "Total computation time (for path planning service)  = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
 
 
     float distance = this->path_to_distance(planned_path);
+    std::cout << "Computation time (path planning)  = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << ". Distance: " << distance << std::endl;
 
 
     // add header
