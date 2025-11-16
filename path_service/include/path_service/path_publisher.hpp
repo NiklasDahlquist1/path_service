@@ -9,6 +9,7 @@
 #include "path_service/srv/get_path.hpp"
 #include "path_service/srv/set_map.hpp"
 #include "path_service/srv/position_status.hpp"
+#include "path_service/srv/map_dimensions.hpp"
 
 
 #include "nav_msgs/msg/odometry.hpp"
@@ -150,6 +151,7 @@ class Path_generator : public rclcpp::Node
     rclcpp::Service<path_service::srv::GetPath>::SharedPtr path_cost_service;
     rclcpp::Service<path_service::srv::SetMap>::SharedPtr update_map_path_service;
     rclcpp::Service<path_service::srv::PositionStatus>::SharedPtr get_map_position_service;
+    rclcpp::Service<path_service::srv::MapDimensions>::SharedPtr get_map_dimensions_service;
 
     void init_map_to_grid(std::string path);
 
@@ -157,6 +159,7 @@ class Path_generator : public rclcpp::Node
     void goal_position_callback(geometry_msgs::msg::Point::SharedPtr msg);
 
 
+    void get_map_dimensions( std::shared_ptr<path_service::srv::MapDimensions::Request> request, std::shared_ptr<path_service::srv::MapDimensions::Response> response);
     void get_map_position_status( std::shared_ptr<path_service::srv::PositionStatus::Request> request, std::shared_ptr<path_service::srv::PositionStatus::Response> response);
     void plan_path_service( std::shared_ptr<path_service::srv::GetPath::Request> request, std::shared_ptr<path_service::srv::GetPath::Response> response);
     void set_map_by_path( std::shared_ptr<path_service::srv::SetMap::Request> request, std::shared_ptr<path_service::srv::SetMap::Response> response);
@@ -164,7 +167,8 @@ class Path_generator : public rclcpp::Node
 
 
     std::vector<std::vector<int>> global_grid;
-
+    double map_width;
+    double map_height;
 
     // offset in meter. Tells how the map is moved in relation to the world
     double resolution_meter_per_pixel;
@@ -187,6 +191,7 @@ Path_generator::Path_generator() : Node("Path_generator")
     this->path_cost_service = this->create_service<path_service::srv::GetPath>("get_path", std::bind(&Path_generator::plan_path_service, this, std::placeholders::_1, std::placeholders::_2));
     this->update_map_path_service = this->create_service<path_service::srv::SetMap>("set_map_filepath", std::bind(&Path_generator::set_map_by_path, this, std::placeholders::_1, std::placeholders::_2));
     this->get_map_position_service = this->create_service<path_service::srv::PositionStatus>("get_map_position_status", std::bind(&Path_generator::get_map_position_status, this, std::placeholders::_1, std::placeholders::_2));
+    this->get_map_dimensions_service = this->create_service<path_service::srv::MapDimensions>("get_map_dimensions", std::bind(&Path_generator::get_map_dimensions, this, std::placeholders::_1, std::placeholders::_2));
 
 
 
@@ -250,7 +255,11 @@ void Path_generator::init_map_to_grid(std::string path)
     global_grid = simulation_2d::image_to_occupancy_grid(p.parent_path().string() + "/" + image_name);
     RCLCPP_INFO_STREAM(this->get_logger(), "Path planner initialized with image " << path << ". Origin: (" << this->map_origin_x << ", " << this->map_origin_y << ") Res: " << this->resolution_meter_per_pixel);
 
-    // image_map = cv::imread(path);
+    
+    // save map size
+    this->map_width = global_grid.size() * this->resolution_meter_per_pixel;
+    this->map_height = global_grid[0].size() * this->resolution_meter_per_pixel;
+
 }
 
 
@@ -402,6 +411,20 @@ void Path_generator::get_map_position_status( std::shared_ptr<path_service::srv:
     response.get()->position_is_free = map_point_is_free;
     return;
 }
+
+void Path_generator::get_map_dimensions( std::shared_ptr<path_service::srv::MapDimensions::Request> request, std::shared_ptr<path_service::srv::MapDimensions::Response> response)
+{
+    response.get()->map_width = this->map_width;
+    response.get()->map_height = this->map_height;
+    response.get()->map_resolution = this->resolution_meter_per_pixel;
+
+    response.get()->map_origin.x = this->map_origin_x;
+    response.get()->map_origin.y = this->map_origin_y;
+
+
+    return;
+}
+
 
 
 #endif
